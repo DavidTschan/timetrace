@@ -20,6 +20,7 @@ var (
 	ErrNoEndTime           = errors.New("no end time for last record")
 	ErrTrackingNotStarted  = errors.New("start tracking first")
 	ErrAllDirectoriesEmpty = errors.New("all directories empty")
+	ErrNoProject           = errors.New("please create a project first")
 )
 
 type Report struct {
@@ -173,6 +174,33 @@ func (t *Timetrace) Stop() error {
 
 	if latestRecord == nil || latestRecord.End != nil {
 		return ErrTrackingNotStarted
+	}
+
+	end := time.Now()
+	latestRecord.End = &end
+
+	return t.SaveRecord(*latestRecord, true)
+}
+
+func (t *Timetrace) Toggle() error {
+
+	latestRecord, err := t.LoadLatestRecord()
+	if err != nil && !errors.Is(err, ErrAllDirectoriesEmpty) {
+		return err
+	}
+	if latestRecord == nil {
+		return ErrNoProject
+	}
+	project := latestRecord.Project
+	// If ready to start again
+	if latestRecord != nil && latestRecord.End != nil {
+		record := Record{
+			Start:      time.Now(),
+			Project:    project,
+			IsBillable: latestRecord.IsBillable,
+			Tags:       latestRecord.Tags,
+		}
+		return t.SaveRecord(record, false)
 	}
 
 	end := time.Now()
