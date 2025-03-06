@@ -192,7 +192,14 @@ func (t *Timetrace) Toggle() error {
 		return ErrNoProject
 	}
 	project := latestRecord.Project
-	// If ready to start again
+  
+  if project == nil {
+    project = &Project{
+      Key: "project",
+    }
+  }
+
+  // If ready to start again
 	if latestRecord != nil && latestRecord.End != nil {
 		record := Record{
 			Start:      time.Now(),
